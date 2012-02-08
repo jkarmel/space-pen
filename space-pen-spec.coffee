@@ -23,8 +23,8 @@ describe "View", ->
 
         @list: ->
           @ol =>
-            @li outlet: 'li1', click: 'li1Clicked', class: 'foo', "one"
-            @li outlet: 'li2', keypress:'li2Keypressed', class: 'bar', "two"
+            @li '.foo', outlet: 'li1', click:    'li1Clicked',  "one"
+            @li '.bar', outlet: 'li2', keypress: 'li2Keypressed',  "two"
 
         initialize: (args...) ->
           @initializeCalledWith = args
