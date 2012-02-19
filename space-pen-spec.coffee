@@ -20,15 +20,19 @@ describe "View", ->
             @h1 { outlet: 'header' }, params.title + " " + otherArg
             @list()
             @subview 'subview', new Subview(title: "Subview", 43)
-            @div '.treated-as-content'
-            @div '.first-class#then-id', "w/content"
-            @div '#first-id.then-class', "w/content"
-            @div '#w-attrs', { 'with-attr': 'test' }
+            @div ".first1class#then-id", "w/content"
+            @div "#first-id.then_class", "w/other content"
+            @div "#id", "w/content", data: "and attrs"
+            @div "#id", data: "w/attrs", "and content"
+            @div ".B&W?", "w/content"
+            @div ".treated-as#content"
+            @div "#first-id#second-id", "w/content"
+            @div ".1bad-identifier#-2bad-identifier", "w/content"
 
         @list: ->
           @ol =>
-            @li '.foo', outlet: 'li1', click:    'li1Clicked',  "one"
-            @li '.bar', outlet: 'li2', keypress: 'li2Keypressed',  "two"
+            @li outlet: 'li1', click: 'li1Clicked', class: 'foo', "one"
+            @li outlet: 'li2', keypress:'li2Keypressed', class: 'bar', "two"
 
         initialize: (args...) ->
           @initializeCalledWith = args
@@ -100,17 +104,27 @@ describe "View", ->
         expect(view.subview.view()).toBe view.subview
         expect(view.subview.header.view()).toBe view.subview
 
-      it "renders one and only one string argument as content", ->
-        console.log view.find('div')
-        console.log view.find(":contains(.treated-as-content)")
-        expect(view.find(":contains(.treated-as-content)")).toExist()
+      describe "when the first argument is a selector", ->
+        it "renders an element with appropriate class and id", ->
+          expect(view.find(".first1class#then-id")).toHaveText("w/content")
+          expect(view.find("#first-id.then_class")).toHaveText("w/other content")
 
-      it "renders an element with appropriate class and id if the first argument is a selector", ->
-        expect(view.find(".first-class#then-id")).toHaveText("w/content")
-        expect(view.find("#first-id.then-class")).toHaveText("w/content")
+        it "renders the selector as content when it is the only argument", ->
+          expect(view.find(":contains(.treated-as#content)")).toExist()
 
-      it "renders an element with appropriate class and id if the first argument is a selector and the second is a hash of attributes", ->
-        expect(view.find("#w-attrs[with-attr='test']")).toExist()
+        it "only renders one id", ->
+          expect(view.find("#first-id")).toExist()
+          expect(view.find("#second-id")).not.toExist()
+
+        it "doesn't render bad identifiers", ->
+          expect(view.html().match(/1bad-identifier/)).toBeNull()
+          expect(view.find(".1bad-identifier")).not.toExist();
+          expect(view.html().match(/-2bad-identifier/)).toBeNull()
+          expect(view.find("#-2bad-identifier")).not.toExist();
+
+        it "renders attributes and content properly", ->
+          expect(view.find("#id[data='and attrs']")).toHaveText("w/content")
+          expect(view.find("#id[data='w/attrs']")).toHaveText("and content")
 
       it "defaults the first argument passed to @content and initialize to {}", ->
         contentCalledWith = null
@@ -233,18 +247,3 @@ describe "View", ->
 
       expect(fragment.find('div#subview')).toExist()
       expect(fragment.foo).toMatchSelector('#subview')
-
-  describe "$$$", ->
-    it "returns the raw HTML constructed by tag methods called by the given function (not a jQuery wrapper)", ->
-      html = $$$ ->
-        @div class: "foo", =>
-          @ol =>
-            @li id: 'one'
-            @li id: 'two'
-
-      expect(typeof html).toBe 'string'
-      fragment = $(html)
-      expect(fragment).toMatchSelector('div.foo')
-      expect(fragment.find('ol')).toExist()
-      expect(fragment.find('ol li#one')).toExist()
-      expect(fragment.find('ol li#two')).toExist()
