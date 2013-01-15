@@ -80,6 +80,7 @@ class View extends jQuery
     step(this) for step in postProcessingSteps
     @initialize?(args...)
 
+
   buildHtml: (params) ->
     @constructor.builder = new Builder
     @constructor.content(params)
@@ -97,7 +98,7 @@ class View extends jQuery
   bindEventHandlers: (view) ->
     for eventName in events
       selector = "[#{eventName}]"
-      elements = view.find(selector).add(view.filter(selector))
+      elements = @find(selector).add(@filter(selector))
       elements.each ->
         element = $(this)
         methodName = element.attr(eventName)
@@ -228,6 +229,27 @@ for methodName in ['prependTo', 'appendTo', 'insertAfter', 'insertBefore']
       callAttachHook(this)
       result
 
+class FreeForm extends View
+  @content: (fn)->
+    fn.call(@)
+
+  constructor: ({parentView, fn}) ->
+    [html, postProcessingSteps] = @constructor.buildHtml -> fn.call(@)
+    jQuery.fn.init.call(this, html)
+    @constructor = jQuery # sadly, jQuery assumes this.constructor == jQuery in pushStack
+    throw new Error("View markup must have a single root element") if this.length != 1
+    @wireOutlets(parentView)
+    @bindEventHandlers(parentView)
+    @find('*').andSelf().data('view', this)
+    @attr('callAttachHooks', true)
+    step(parentView) for step in postProcessingSteps
+    @initialize?(args...)
+
 (exports ? this).View = View
-(exports ? this).$$ = (fn) -> View.render.call(View, fn)
+(exports ? this).$$ = (parentView, fn) ->
+  if fn
+    new FreeForm {parentView, fn}
+  else 
+    fn = parentView
+    View.render.call(View, fn)
 (exports ? this).$$$ = (fn) -> View.buildHtml.call(View, fn)[0]

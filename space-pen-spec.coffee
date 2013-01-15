@@ -1,5 +1,6 @@
 describe "View", ->
   view = null
+  Subview = null
 
   describe "View objects", ->
     TestView = null
@@ -41,6 +42,11 @@ describe "View", ->
         li1Clicked: ->,
         li2Keypressed: ->
         viewClicked: ->
+        appendSpan: ->
+          @append $$ @, ->
+            @span click: 'spanClicked', 'span text'
+        spanClicked: ->
+          @spanClickedCalled = true
 
       view = new TestView({title: "Zebra"}, 42)
 
@@ -252,3 +258,28 @@ describe "View", ->
 
       expect(fragment.find('div#subview')).toExist()
       expect(fragment.foo).toMatchSelector('#subview')
+
+    describe "When passed a View element as the first param", ->
+
+      it "can wire outlets to that View element", ->
+        view.append $$ view, ->
+          @div =>
+            @div outlet:'span', 'span text'
+
+        expect(view.span).toHaveText 'span text'
+
+      it "can wire events to that element", ->
+        view.appendSpan()
+        view.find('span').click()
+        expect(view.spanClickedCalled).toBe(true)
+
+      it "constructs and wire outlets for subviews", ->
+        view.append $$ view, ->
+          @div =>
+            @subview 'subview2', new Subview(title: "Subview 2", 47)
+
+        window.__view = view
+        expect(view.subview2).toExist()
+        expect(view.subview2.find('h2:contains(Subview 2 47)')).toExist()
+        expect(view.subview2.parentView).toBe view
+        expect(view.subview2.initializeCalledWith).toEqual([{title: "Subview 2"}, 47])
