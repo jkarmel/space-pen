@@ -184,14 +184,14 @@ class Builder
       classes = selectorStr.match classExp
 
       attrs.class = (klass.substr(1) for klass in classes).join(" ") if classes
-      attrs.id = id[0].substr(1) if id
+      attrs.id = id[0].substr(1) if id?.length
 
       userDefinedAttrs = false
 
       for arg in args
         if typeof arg is "object"
           userDefinedAttrs = true
-          arg.id = attrs.id
+          arg.id = attrs.id if attrs.id
           arg.class = attrs.class
 
       args.push attrs unless userDefinedAttrs

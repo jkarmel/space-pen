@@ -29,6 +29,7 @@ describe "View", ->
             @div "also-treated-as#content", data: "test"
             @div "#first-id#second-id", "w/content"
             @div ".1bad-identifier#-2bad-identifier", "w/content"
+            @div '.a-class-without-id', {}, 'some stuff'
 
         @list: ->
           @ol =>
@@ -133,8 +134,13 @@ describe "View", ->
           expect(view.html().match(/-2bad-identifier/)).toBeNull()
           expect(view.find("#-2bad-identifier")).not.toExist();
 
+        it "renders correctly with classes but no id", ->
+          expect(view.find('.a-class-without-id')).toExist()
+          expect(view.find('#undefined')).not.toExist()
+
         it "renders attributes and content properly", ->
           expect(view.find("#id[data='and attrs']")).toHaveText("w/content")
+          window.view =  view
           expect(view.find("#id[data='w/attrs']")).toHaveText("and content")
 
       it "defaults the first argument passed to @content and initialize to {}", ->
