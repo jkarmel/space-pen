@@ -35,8 +35,9 @@ classExp = new RegExp("\\.#{ident}", "g")
 class View extends jQuery
   @builderStack: []
 
-  elements.forEach (tagName) ->
-    View[tagName] = (args...) -> @currentBuilder.tag(tagName, args...)
+  for tagName in elements
+    do (tagName) ->
+      View[tagName] = (args...) -> @currentBuilder.tag(tagName, args...)
 
   @subview: (name, view) ->
     @currentBuilder.subview(name, view)
@@ -174,7 +175,7 @@ class Builder
       else
         options.attributes = arg
     options
-    
+
   processSelector: (args) ->
     if args.length > 1 and typeof args[0] is "string" and /^[\.#]/.test args[0]
       selectorStr = args.shift()
@@ -249,7 +250,7 @@ class FreeForm extends View
 (exports ? this).$$ = (parentView, fn) ->
   if fn
     new FreeForm {parentView, fn}
-  else 
+  else
     fn = parentView
     View.render.call(View, fn)
 (exports ? this).$$$ = (fn) -> View.buildHtml.call(View, fn)[0]
